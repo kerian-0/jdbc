@@ -7,7 +7,7 @@ public interface SQLQueries {
 	
 	String DISTRICT_INSERT = "insert districts (name, burmese, state_id) values (?, ?, ?)";
 	String DISTRICT_UPDATE = "update district set name = ?, burmese = ?, state_id = ? where id = ?";
-	String DISTRICT_SELECT_ALL = "select d.id district_id, d.name district_name, d.burmese district_burmese, d.deleted district_deleted, s.id state_id, s.name state_name, s.burmese state_burmese, s.region, s.capital, s.population, s.deleted state_deleted from districts d join states s on d.state_id = s.id;";
+	String DISTRICT_SELECT_ALL = "select d.id district_id, d.name district_name, d.burmese district_burmese, d.deleted district_deleted, s.id state_id, s.name state_name, s.burmese state_burmese, s.region, s.capital, s.population, s.deleted state_deleted from districts d join states s on d.state_id = s.id";
 	String DISTRICT_SELECT_BY_ID = DISTRICT_SELECT_ALL.concat(" where d.id = ?");
 	
 	static String deleteStatement(String entityName) {

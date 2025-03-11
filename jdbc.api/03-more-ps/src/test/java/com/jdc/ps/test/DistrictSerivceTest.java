@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -79,7 +80,27 @@ void test_for_select_by_id(int id) {
 		return Stream.of(Arguments.of(entities));
 	}
 
-	void test_for_update() {
+	
+	@Order(5)
+	@ParameterizedTest
+	@CsvSource(delimiter = '\t',value="pyapon	ဖျာပုံ	1	4")
+	void test_for_update(String name,String burmese,int state_id, int idForUpdate ) {
+		
+		District district=new District();
+		district.setName(name);
+		district.setBurmese(burmese);
+		district.setState(stateService.selectById(state_id));
+		
+		districtService.update(idForUpdate, district);
+		
+		var districtUpdated = districtService.selectById(idForUpdate);
+		assertNotNull(districtUpdated);
+		assertEquals(name, districtUpdated.getName());
+		assertEquals(burmese, districtUpdated.getBurmese());
+		assertEquals(state_id, districtUpdated.getState());
+		
+		
+		
 	}
 
 	@Order(1)
