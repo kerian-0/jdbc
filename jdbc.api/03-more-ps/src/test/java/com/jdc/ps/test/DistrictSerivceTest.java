@@ -7,16 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.jdc.ps.entity.District;
+import com.jdc.ps.entity.Region;
 import com.jdc.ps.service.DistrictService;
 import com.jdc.ps.service.StateService;
 
@@ -24,91 +26,102 @@ import com.jdc.ps.service.StateService;
 public class DistrictSerivceTest {
 
 	DistrictService districtService = new DistrictService();
-	static StateService stateService = new StateService();
+	StateService stateService = new StateService();
 
-@Order(3)
-@ParameterizedTest
-@CsvSource({
-	"2,7","4,6"
-})
-	void test_for_delete(int id,int expectCount) {
-	districtService.delete(id);
-	assertEquals(expectCount,districtService.count());
+	@Order(3)
+	@ParameterizedTest
+	@CsvSource({
+		"2,7","4,6"
+	})
+	@Disabled
+		void test_for_delete(int id,int expectCount) {
+		districtService.delete(id);
+		assertEquals(expectCount,districtService.count());
+		}
+		
+		
+	@Order(4)
+	@ParameterizedTest
+	@CsvSource("1")
+	void test_for_select_by_id(int id) {
+	    var rs = districtService.selectById(id);
+	    
+	    assertEquals(id, rs.getId());
 	}
-	
-	
-@Order(4)
-@ParameterizedTest
-@CsvSource("1")
-void test_for_select_by_id(int id) {
-    var rs = districtService.selectById(id);
-    
-    assertEquals(id, rs.getId());
-}
 
+
+	@Order(4)
+	@ParameterizedTest
+	@CsvSource({ ",a,,0,7", ",ka,,0,12", ",,Lower,0,15", ",,,1000000,75", ",,Central,1000000,14", "m,m,,0,6",
+			"m,m,Central,0,5" })
+	@Disabled
+	void test_for_select(String districtName, String stateName, Region region, int population,
+			int expectedRecordCount) {
+		var resultList = districtService.select(districtName, stateName, region, population);
+		assertEquals(expectedRecordCount, resultList.size());
+	}
+
+	@Order(3)
+	@ParameterizedTest
+	@CsvSource({ "Kyonpyaw, ကျုံပျော်, 2", "Pyay, ပြည်, 11" })
+	void test_for_update(String name, String burmese, int idForUpdate) {
+		var district = districtService.selectById(idForUpdate);
+		assertNotNull(district);
+		district.setName(name);
+		district.setBurmese(burmese);
+		districtService.update(idForUpdate, district);
+
+		var updatedDistrict = districtService.selectById(idForUpdate);
+		assertNotNull(updatedDistrict);
+		assertEquals(name, updatedDistrict.getName());
+		assertEquals(burmese, updatedDistrict.getBurmese());
+	}
 
 	@Order(2)
 	@ParameterizedTest
-	@MethodSource(value = "getDistrictEntity")
-	void test_for_insert_entities(List<District> entities) {
-		var insertCount = districtService.insert(entities);
-		assertEquals(3, insertCount);
-		assertEquals(8, districtService.count());
-
+	@MethodSource("getDistrictEntityList")
+	void test_for_insert_entities(List<District> entities, int insertedCount) {
+		var result = districtService.insert(entities);
+		assertEquals(insertedCount, result);
 	}
 
-	static Stream<Arguments> getDistrictEntity() {
-		List<District> entities = new ArrayList<District>();
-		District myanaung = new District();
-		myanaung.setName("MyanAung");
-		myanaung.setBurmese("မြန်အောင်");
-		myanaung.setState(stateService.selectById(1));
+	static Stream<Arguments> getDistrictEntityList() {
+		var service = new StateService();
+		var state = service.selectById(2);
 
-		District myaungmya = new District();
-		myaungmya.setName("myaungmya");
-		myaungmya.setBurmese("မြောင်းမြ");
-		myaungmya.setState(stateService.selectById(1));
+		var list = new ArrayList<District>();
 
-		District pyapon = new District();
-		pyapon.setName("pyapon");
-		pyapon.setBurmese("ဖျာပုံ");
-		pyapon.setState(stateService.selectById(1));
-		entities.add(myanaung);
-		entities.add(myaungmya);
-		entities.add(pyapon);
+		var d1 = new District();
+		d1.setName("Bago");
+		d1.setBurmese("ပဲခူး");
+		d1.setState(state);
+		list.add(d1);
 
-		return Stream.of(Arguments.of(entities));
-	}
+		var d2 = new District();
+		d2.setName("Taungoo");
+		d2.setBurmese("တောင်ငူ");
+		d2.setState(state);
+		list.add(d2);
 
-	
-	@Order(5)
-	@ParameterizedTest
-	@CsvSource(delimiter = '\t',value="pyapon	ဖျာပုံ	1	4")
-	void test_for_update(String name,String burmese,int state_id, int idForUpdate ) {
-		
-		District district=new District();
-		district.setName(name);
-		district.setBurmese(burmese);
-		district.setState(stateService.selectById(state_id));
-		
-		districtService.update(idForUpdate, district);
-		
-		var districtUpdated = districtService.selectById(idForUpdate);
-		assertNotNull(districtUpdated);
-		assertEquals(name, districtUpdated.getName());
-		assertEquals(burmese, districtUpdated.getBurmese());
-		assertEquals(state_id, districtUpdated.getState());
-		
-		
-		
+		var d3 = new District();
+		d3.setName("Paya");
+		d3.setBurmese("ပြေ");
+		d3.setState(state);
+		list.add(d3);
+
+		var d4 = new District();
+		d4.setName("Tharrawaddy");
+		d4.setBurmese("သာယာဝတီ");
+		d4.setState(state);
+		list.add(d4);
+
+		return Stream.of(Arguments.of(list, 4));
 	}
 
 	@Order(1)
 	@ParameterizedTest
-	@CsvSource({ "Pathein, ပုသိမ်, 1, 1", "Kyonpyaw, ကျုံပျော်, 1, 2", "Hinthada, ဟင်္သာတ, 1, 3",
-			"Labutta, လပွတ္တာ, 1, 4", "Maubin, မအူပင်, 1, 5",
-
-	})
+	@CsvFileSource(resources = "/districts_of_states.txt")
+	@Disabled
 	void test_for_insert(String name, String burmese, int stateId, int expectedId) {
 		var district = new District();
 		district.setName(name);

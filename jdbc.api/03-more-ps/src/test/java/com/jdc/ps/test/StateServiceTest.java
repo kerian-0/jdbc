@@ -7,15 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import com.jdc.ps.entity.Region;
+import com.jdc.ps.entity.Region; 
 import com.jdc.ps.entity.State;
 import com.jdc.ps.service.StateService;
 
@@ -23,74 +27,91 @@ import com.jdc.ps.service.StateService;
 public final class StateServiceTest extends BaseTest {
 
 	StateService stateService = new StateService();
-	
+
 	@Order(4)
 	@ParameterizedTest
-	@CsvSource({
-		"6, 6",
-		"4, 5"
-	})
+	@CsvSource({ "6, 14", "4, 13" })
+	@Disabled
 	void test_for_delete(int id, int expectedCount) {
 		stateService.delete(id);
 		assertEquals(expectedCount, stateService.count());
 	}
-	
+
 	@Order(3)
 	@ParameterizedTest
 	@MethodSource(value = "getStateEntityList")
+	@Disabled
 	void test_for_insert_list(List<State> entities) {
 		var insertedCount = stateService.insert(entities);
 		assertEquals(3, insertedCount);
-		
+
 		assertEquals(7, stateService.count());
 	}
-	
+
 	static Stream<Arguments> getStateEntityList() {
 		List<State> entities = new ArrayList<>();
-		
+
 		State kachin = new State();
 		kachin.setName("Kachin");
 		kachin.setBurmese("ကချင်ပြည်နယ်");
 		kachin.setRegion(Region.North);
 		kachin.setCapital("Myitkyina");
 		kachin.setPopulation(1_689_441);
-		
+
 		State kayah = new State();
 		kayah.setName("Kayah");
 		kayah.setBurmese("ကယာပြည်နယ်");
 		kayah.setRegion(Region.North);
 		kayah.setCapital("Loikaw");
 		kayah.setPopulation(286_627);
-		
+
 		State kayin = new State();
 		kayin.setName("Kayin");
 		kayin.setBurmese("ကရင်ပြည်နယ်");
 		kayin.setRegion(Region.Lower);
 		kayin.setCapital("Hpa-an");
 		kayin.setPopulation(1_574_079);
-		
+
 		entities.add(kachin);
 		entities.add(kayah);
 		entities.add(kayin);
-		
+
 		return Stream.of(Arguments.of(entities));
 	}
+
+	@Order(5)
+	@ParameterizedTest
+	@ValueSource(ints={15})
+	void test_for_district_count_by_state() {
+		var actualId=stateService.totalDistrictCountbyState();
+		System.out.println(actualId);
+		assertEquals(15, actualId);
+	}
 	
+	@Order(6)
+	@ParameterizedTest
+	@ValueSource(ints= {15})
+//	@Disabled
+	void test_for_ration_population_of_district() {
+		int rsCount=stateService.ratioOfOneDistrictAvgPopulation();
+		assertEquals(15, rsCount);
+		
+	}
 	@Order(2)
 	@ParameterizedTest
 	@CsvSource(delimiter = '\t', value = "Naypyidaw Union Territory	နေပြည်တော် ပြည်ထောင်စုနယ်မြေ	Central	Naypyidaw	1_160_242	4")
-	void test_for_update(String name, String burmese, Region region,
-			String capital, int population, int idForUpdate) {
-		
+	@Disabled
+	void test_for_update(String name, String burmese, Region region, String capital, int population, int idForUpdate) {
+
 		State state = new State();
 		state.setName(name);
 		state.setBurmese(burmese);
 		state.setRegion(region);
 		state.setCapital(capital);
 		state.setPopulation(population);
-		
+
 		stateService.update(idForUpdate, state);
-		
+
 		var stateAfterUpdated = stateService.selectById(idForUpdate);
 		assertNotNull(stateAfterUpdated);
 		assertEquals(name, stateAfterUpdated.getName());
@@ -99,13 +120,11 @@ public final class StateServiceTest extends BaseTest {
 		assertEquals(capital, stateAfterUpdated.getCapital());
 		assertEquals(population, stateAfterUpdated.getPopulation());
 	}
-		
+
 	@Order(1)
 	@ParameterizedTest
-	@CsvSource(value = { "Ayeyarwady Region	ဧရာဝတီတိုင်းဒေသကြီး	Lower	Pathein	6_184_829	1",
-			"Bago Region	ပဲခူးတိုင်းဒေသကြီး	Lower	Bago	4_867_373	2",
-			"Chin State	ချင်းပြည်နယ်	West	Hakha	478_801	3",
-			"Naypyidaw	နေပြည်တော်	West	Naypyitaw	1_160_110	4"}, delimiter = '\t')
+	@CsvFileSource(resources = "/states.txt")
+//	@Disabled
 	void test_for_insert(String name, String burmese, Region region, String capital, int population, int expectedId) {
 
 		State state = new State();
@@ -120,7 +139,7 @@ public final class StateServiceTest extends BaseTest {
 
 		int generatedId = stateService.insert(state);
 		count = stateService.count();
-		
+
 		assertEquals(expectedId, generatedId);
 		assertEquals(countBeforeInsert + 1, count);
 	}

@@ -8,81 +8,81 @@ import java.util.List;
 
 import com.jdc.ps.entity.Region;
 import com.jdc.ps.entity.State;
+import com.jdc.ps.entity.TotalPopulationByRegion;
 
 import static com.jdc.ps.util.SQLQueries.*;
 import static com.jdc.ps.util.ConnectionManager.getConnection;
 
 public class StateService implements BaseService<State> {
-	
+
 	private final String ENTITY_NAME = "states";
-	
+	static State state;
+
 	@Override
 	public int insert(State entity) {
-		
-		try(var conn = getConnection();
+
+		try (var conn = getConnection();
 				var stmt = conn.prepareStatement(STATE_INSERT, Statement.RETURN_GENERATED_KEYS)) {
-			
+
 			stmt.setString(1, entity.getName());
 			stmt.setString(2, entity.getBurmese());
 			stmt.setString(3, entity.getRegion().name());
 			stmt.setString(4, entity.getCapital());
 			stmt.setInt(5, entity.getPopulation());
-			
+
 			stmt.executeUpdate();
-			
+
 			ResultSet rs = stmt.getGeneratedKeys();
-			
-			while(rs.next()) {
+
+			while (rs.next()) {
 				return rs.getInt(1);
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return 0;
 	}
 
 	@Override
 	public int insert(List<State> entities) {
-		
-		try(var conn = getConnection();
-				var stmt = conn.prepareStatement(STATE_INSERT)) {
-			
-			for(State entity : entities) {
-				
+
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(STATE_INSERT)) {
+
+			for (State entity : entities) {
+
 				stmt.setString(1, entity.getName());
 				stmt.setString(2, entity.getBurmese());
 				stmt.setString(3, entity.getRegion().name());
 				stmt.setString(4, entity.getCapital());
 				stmt.setInt(5, entity.getPopulation());
-				
+
 				stmt.addBatch();
 			}
-			
+
 			return stmt.executeBatch().length;
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return 0;
 	}
 
 	@Override
 	public void update(int id, State entity) {
-		try(var conn = getConnection();
-				var stmt = conn.prepareStatement(STATE_UPDATE)) {
-			
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(STATE_UPDATE)) {
+
 			stmt.setString(1, entity.getName());
 			stmt.setString(2, entity.getBurmese());
 			stmt.setString(3, entity.getRegion().name());
 			stmt.setString(4, entity.getCapital());
 			stmt.setInt(5, entity.getPopulation());
 			stmt.setInt(6, id);
-			
+
 			stmt.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -90,75 +90,128 @@ public class StateService implements BaseService<State> {
 
 	@Override
 	public void delete(int id) {
-		
-		try(var conn = getConnection();
-				var stmt = conn.prepareStatement(deleteStatement(ENTITY_NAME))) {
-			
+
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(deleteStatement(ENTITY_NAME))) {
+
 			stmt.setInt(1, id);
 			stmt.executeUpdate();
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override
 	public List<State> selectAll() {
 		List<State> result = new ArrayList<>();
-		
-		try(var conn = getConnection();
-				var stmt = conn.createStatement()) {
-			
+
+		try (var conn = getConnection(); var stmt = conn.createStatement()) {
+
 			var rs = stmt.executeQuery(selectAllStatement(ENTITY_NAME));
-			
-			while(rs.next()) {
+
+			while (rs.next()) {
 				result.add(getStateEntity(rs));
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return result;
 	}
 
 	@Override
 	public State selectById(int id) {
-		
-		try(var conn = getConnection();
-				var stmt = conn.prepareStatement(selectByIdStatement(ENTITY_NAME))) {
-			
+
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(selectByIdStatement(ENTITY_NAME))) {
+
 			stmt.setInt(1, id);
 			var rs = stmt.executeQuery();
-			
-			while(rs.next()) {
+
+			while (rs.next()) {
 				return getStateEntity(rs);
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
+
 	@Override
 	public long count() {
-		
-		try(var conn = getConnection();
-				var stmt = conn.createStatement()) {
-			
+
+		try (var conn = getConnection(); var stmt = conn.createStatement()) {
+
 			var rs = stmt.executeQuery(countStatement(ENTITY_NAME));
-			while(rs.next()) {
+			while (rs.next()) {
 				return rs.getLong(1);
 			}
-			
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
+
 		return 0;
+	}
+
+	public int totalDistrictCountbyState() {
+	    try (var conn = getConnection();
+	         var stmt = conn.createStatement()) {
+	        ResultSet rs = stmt.executeQuery(DISTRICT_TOTAL_COUNT_BY_STATE);
+	        if (rs.next()) {
+	            int count = rs.getInt(1);
+	            System.out.println("Total district count: " + count);
+	            return count;
+	        } else {
+	            System.out.println("No results returned from DISTRICT_TOTAL_COUNT_BY_STATE query.");
+	            return -1;
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return -1;
+	    }
+	}
+
+	public int ratioOfOneDistrictAvgPopulation() {
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(RATIO_OF_ONE_DISTRICT_AVGPOPULATION);) {
+
+			var rs = stmt.executeQuery();
+			int ratioCount = 0;
+			System.out.println(rs);
+
+			while (rs.next()) {
+
+				System.out.println("Name : " + rs.getString("burmese"));
+				ratioCount++;
+				System.out.println(ratioCount);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	public List<TotalPopulationByRegion> searchTotalPopulationByRegion(int totalPopulation) {
+		var result = new ArrayList<TotalPopulationByRegion>();
+
+		try (var conn = getConnection(); var stmt = conn.prepareStatement(STATE_TOTAL_POPULATION_BY_REGION)) {
+
+			stmt.setInt(1, totalPopulation);
+
+			var rs = stmt.executeQuery();
+			while (rs.next())
+				result.add(new TotalPopulationByRegion(Region.valueOf(rs.getString("region")), rs.getInt("state_count"),
+						rs.getInt("total_population")));
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return result;
 	}
 
 	private State getStateEntity(ResultSet rs) throws SQLException {

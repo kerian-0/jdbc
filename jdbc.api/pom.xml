@@ -53,5 +53,6 @@
 		<module>01-hello-jdbc</module>
 		<module>02-prepare-statement</module>
 		<module>03-more-ps</module>
+		<module>com.jdc.ly.maven</module>
 	</modules>
 </project>

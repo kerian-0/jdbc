@@ -10,6 +10,9 @@ public class State {
 	private int population;
 	private boolean deleted;
 
+	
+
+	
 	public int getId() {
 		return id;
 	}
